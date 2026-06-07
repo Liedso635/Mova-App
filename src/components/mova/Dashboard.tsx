@@ -10,6 +10,7 @@ import {
   X,
   MapPin,
 } from "lucide-react";
+import CityScene from "../../components/CityScene";
 
 type Kind = "motorista" | "passageiro";
 type Modal = null | "ride" | "history" | "profile";
@@ -84,19 +85,17 @@ export function Dashboard({ kind }: { kind: Kind }) {
         </button>
       </aside>
 
-      {/* Map placeholder */}
-      <main className="relative flex flex-1 items-center justify-center bg-white pb-20 md:pb-0">
-        <div
-          className="absolute inset-0 opacity-30"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(4,16,55,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(4,16,55,0.08) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-          }}
-        />
-        <div className="relative flex flex-col items-center text-gray-500">
-          <MapPin className="mb-3 h-10 w-10" style={{ color: "#041037" }} />
-          <p className="text-sm">Mapa será integrado em breve</p>
+      {/* Map — ocupa todo o espaço disponível */}
+      <main className="relative flex flex-1 pb-20 md:pb-0" style={{ minHeight: "100dvh" }}>
+        {/* CityScene preenche todo o main */}
+        <div className="absolute inset-0">
+          <CityScene />
+        </div>
+
+        {/* Badge de localização */}
+        <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 shadow backdrop-blur-sm">
+          <MapPin className="h-4 w-4 text-red-500" />
+          <span className="text-xs font-medium text-gray-700">Maputo, Moçambique</span>
         </div>
       </main>
 
