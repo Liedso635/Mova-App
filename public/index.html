@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estúdio City - Navegação</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #1a1a1a; }
+        canvas { display: block; }
+        #info {
+            position: absolute; top: 10px; left: 10px; color: white;
+            font-family: monospace; background: rgba(0,0,0,0.85);
+            padding: 15px; border-radius: 5px; line-height: 1.4;
+            z-index: 10; width: 280px;
+        }
+        button {
+            background: #ffaa00; border: none; padding: 8px 12px; 
+            border-radius: 4px; color: black; font-weight: bold; 
+            cursor: pointer; margin-top: 10px; display: block; width: 100%;
+        }
+        button:hover { background: #ffcc55; }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <span id="status">Status: Carregando cidade...</span><br>
+        <button id="btnJogar" style="display:none;">Entrar no Modo Jogo (WASD)</button>
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color('#b5b5b5');
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 5000);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        document.body.appendChild(renderer.domElement);
+
+        // ── SOMBRAS ──────────────────────────────────────────────────────────
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        const controls = new PointerLockControls(camera, document.body);
+
+        const btnJogar    = document.getElementById('btnJogar');
+        const txtStatus   = document.getElementById('status');
+
+        // ── LUZ 1 (Laranja) ───────────────────────────────────────────────────
+        const spotLight1 = new THREE.SpotLight('#FFA500', 2000);
+        spotLight1.distance = 1000;
+        spotLight1.angle    = Math.PI / 4;
+        spotLight1.penumbra = 0.5;
+        spotLight1.decay    = 2;
+        spotLight1.position.set(47.47, 41.68, -3.20);
+        spotLight1.rotation.set(-0.01, -0.16, -0.89);
+        spotLight1.target.position.set(0, -80, 0);
+        spotLight1.add(spotLight1.target);
+
+        spotLight1.castShadow = true;
+        spotLight1.shadow.mapSize.width  = 1024;
+        spotLight1.shadow.mapSize.height = 1024;
+        spotLight1.shadow.camera.near    = 1;
+        spotLight1.shadow.camera.far     = 1500;
+        spotLight1.shadow.bias           = -0.001;
+        spotLight1.shadow.radius         = 5;
+
+        scene.add(spotLight1);
+
+        // ── LUZ 2 (Ciano) ─────────────────────────────────────────────────────
+        const spotLight2 = new THREE.SpotLight('#FFFFFF', 2000);
+        spotLight2.distance = 500;
+        spotLight2.angle    = Math.PI / 4;
+        spotLight2.penumbra = 0.5;
+        spotLight2.decay    = 2;
+        spotLight2.position.set(-60.45, 44.1, -23);
+        spotLight2.rotation.set(-2.19, 0.48, 1.64);
+        spotLight2.target.position.set(0, -80, 0);
+        spotLight2.add(spotLight2.target);
+
+        spotLight2.castShadow = true;
+        spotLight2.shadow.mapSize.width  = 1024;
+        spotLight2.shadow.mapSize.height = 1024;
+        spotLight2.shadow.camera.near    = 1;
+        spotLight2.shadow.camera.far     = 1000;
+        spotLight2.shadow.bias           = -0.001;
+        spotLight2.shadow.radius         = 5;
+
+        scene.add(spotLight2);
+
+        // Luz ambiente geral
+        const hemiLight = new THREE.HemisphereLight('rgb(0, 35, 200)', '#444444', 0.6); 
+        hemiLight.position.set(0, 50, 0);
+        scene.add(hemiLight);
+
+        const ambient = new THREE.AmbientLight('#FFFFFF', 0.1); 
+        scene.add(ambient);
+
+        // Ativando os Controles de Jogo
+        btnJogar.addEventListener('click', (e) => { e.stopPropagation(); controls.lock(); });
+        
+        controls.addEventListener('lock', () => {
+            txtStatus.innerHTML = "<strong>Modo Jogo Ativo</strong><br>WASD - Mover<br>Espaço - Subir | Shift - Descer<br>ESC - Sair";
+            btnJogar.style.display = 'none';
+        });
+
+        controls.addEventListener('unlock', () => {
+            txtStatus.innerHTML = "<strong>Navegação Pausada</strong>";
+            btnJogar.style.display = 'block';
+        });
+
+        function loadSavedTransforms() {
+            const saved = localStorage.getItem('saved_multilight_studio');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (data.luz1) {
+                    spotLight1.position.fromArray(data.luz1.pos);
+                    spotLight1.rotation.set(...data.luz1.rot);
+                }
+                if (data.luz2) {
+                    spotLight2.position.fromArray(data.luz2.pos);
+                    spotLight2.rotation.set(...data.luz2.rot);
+                }
+            }
+        }
+
+        // Movimentação da câmera (WASD + Espaço + Shift)
+        const keys = { w: false, a: false, s: false, d: false, space: false, shift: false };
+        let moveSpeed = 50.0;
+        
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            if (controls.isLocked) {
+                if (key in keys) keys[key] = true;
+                if (e.code === 'Space') keys.space = true;
+                if (e.key === 'Shift') keys.shift = true;
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const key = e.key.toLowerCase();
+            if (key in keys) keys[key] = false;
+            if (e.code === 'Space') keys.space = false;
+            if (e.key === 'Shift') keys.shift = false;
+        });
+
+        window.addEventListener('wheel', (e) => {
+            camera.fov = Math.max(20, Math.min(90, camera.fov + e.deltaY * 0.05));
+            camera.updateProjectionMatrix();
+        });
+
+        const clock = new THREE.Clock();
+
+        // Carregando a cidade
+        const loader = new GLTFLoader();
+        loader.load('city.glb', function (gltf) {
+            const model = gltf.scene;
+
+            model.traverse((node) => {
+                if (node.isMesh) {
+                    node.castShadow    = true;
+                    node.receiveShadow = true;
+                }
+            });
+
+            scene.add(model);
+
+            const box    = new THREE.Box3().setFromObject(model);
+            const size   = box.getSize(new THREE.Vector3());
+            const center = box.getCenter(new THREE.Vector3());
+
+            model.position.x += (model.position.x - center.x);
+            model.position.y += (model.position.y - center.y);
+            model.position.z += (model.position.z - center.z);
+
+            const maxDim = Math.max(size.x, size.y, size.z);
+            camera.far = maxDim * 10;
+            camera.updateProjectionMatrix();
+
+            camera.position.set(0, size.y * 0.2 + 5, size.z * 0.4);
+            moveSpeed = maxDim * 0.15;
+
+            spotLight1.shadow.camera.far = maxDim * 3;
+            spotLight2.shadow.camera.far = maxDim * 3;
+
+            const alturaPadrao = size.y + 60;
+            spotLight1.target.position.set(0, -alturaPadrao, 0);
+            spotLight2.target.position.set(0, -alturaPadrao, 0);
+
+            loadSavedTransforms();
+
+            txtStatus.innerHTML = "<strong>Cidade pronta!</strong>";
+            btnJogar.style.display = 'block';
+
+        }, undefined, (error) => {
+            console.error(error);
+            txtStatus.innerHTML = "Erro ao carregar city.glb";
+        });
+
+        // Loop de renderização
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+
+            if (controls.isLocked) {
+                const s = moveSpeed * delta;
+                if (keys.w)     controls.moveForward(s);
+                if (keys.s)     controls.moveForward(-s);
+                if (keys.d)     controls.moveRight(s);
+                if (keys.a)     controls.moveRight(-s);
+                if (keys.space) camera.position.y += s;
+                if (keys.shift) camera.position.y -= s;
+            }
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

@@ -69,7 +69,7 @@ export function MapMarkers({ onSelectPOI }: MapMarkersProps) {
         <mesh key={poi.id} position={poi.posicao}>
           <Html 
             center 
-            distanceFactor={22} // Aumentei um pouco para estabilizar o tamanho com o zoom
+            distanceFactor={8} // Aumentei um pouco para estabilizar o tamanho com o zoom
             style={{ transition: 'all 0.2s', pointerEvents: 'auto' }}
           >
             <button
