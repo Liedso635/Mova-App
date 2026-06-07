@@ -14,7 +14,7 @@ public class ViagemService {
         arvoreViagens = new AVL();
         dicionarioPontos = new DicionarioPontos();
         nextId = 1;
-        carregarMapa(); // popular grafo e pontos a partir de ficheiro
+        carregarMapa();
     }
 
     public ResultadoViagem solicitarViagem(String origemId, String destinoId) {
@@ -47,7 +47,7 @@ public class ViagemService {
     }
 
     private void carregarMapa() {
-        // Exemplo manual (depois pode ler de JSON)
+        // Exemplo manual – depois substituir por leitura de ficheiro JSON
         adicionarPonto("fonte", -22.46, 1.5, -44.97, "Fonte");
         adicionarPonto("w1", -24.98, 0.41, -45.02, "");
         adicionarPonto("p1", -27.11, 3.5, -41.26, "Hotel Central");

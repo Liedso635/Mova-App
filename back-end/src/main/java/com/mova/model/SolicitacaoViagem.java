@@ -1,6 +1,6 @@
 package com.mova.model;
 
-public class SolicitacaoViagem {
+public class SolicitacaoViagem{
     private String origemId;
     private String destinoId;
     public String getOrigemId() { return origemId; }
