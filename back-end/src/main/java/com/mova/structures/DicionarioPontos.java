@@ -1,10 +1,10 @@
 package com.mova.structures;
 
 public class DicionarioPontos {
-    private ListaLigada[] tabela;
+    private ListaDuplamenteLigada[] tabela;
 
     public DicionarioPontos() {
-        tabela = new ListaLigada[26];
+        tabela = new ListaDuplamenteLigada[26];
         for (int i = 0; i < 26; i++) {
             tabela[i] = new ListaDuplamenteLigada();
         }

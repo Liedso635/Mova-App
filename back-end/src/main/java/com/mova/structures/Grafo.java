@@ -1,5 +1,5 @@
-package com.mova.structures.Grafos;
-import com.mova.structures.ListaDuplamenteLigada.ListaDuplamenteLigada;
+package com.mova.structures;
+
 
 public class Grafo implements InterfaceGrafo {
     private ListaDuplamenteLigada vertices;  // lista de NoGrafo
@@ -168,7 +168,7 @@ public class Grafo implements InterfaceGrafo {
             NoGrafo atual = (NoGrafo) fila.dequeue();
             System.out.print(atual.getElemento() + " ");
 
-            for (int i = 0; i < atual.getVizinhos().size(); i++) {
+            for (int i = 0; i < atual.getVizinhos().tamanho(); i++) {
                 NoGrafo.Aresta a = (NoGrafo.Aresta) atual.getVizinhos().pega(i);
                 NoGrafo viz = a.getDestino();
                 if (!viz.isVisitado()) {

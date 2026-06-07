@@ -1,83 +1,58 @@
 package com.mova.structures;
 
-public class ListaDuplamenteLigada implements InterfaceGeral {
-    private No primeiro;
-    private No ultimo;
+public class ListaDuplamenteLigada {
+    private NoLista primeiro;
+    private NoLista ultimo;
     private int tamanho;
 
     public ListaDuplamenteLigada() {
-        this.primeiro = null;
-        this.ultimo = null;
-        this.tamanho = 0;
+        primeiro = null;
+        ultimo = null;
+        tamanho = 0;
     }
 
-    @Override
+    public void adicionar(Object elemento) {   // alias para adicionaFim
+        adicionaFim(elemento);
+    }
+
     public void adicionaInicio(Object elemento) {
-        No novo = new No(null, elemento, primeiro);
-        if (primeiro != null) {
-            primeiro.setAnterior(novo);
-        }
+        NoLista novo = new NoLista(null, elemento, primeiro);
+        if (primeiro != null) primeiro.setAnterior(novo);
         primeiro = novo;
-        if (ultimo == null) {
-            ultimo = novo;
-        }
+        if (ultimo == null) ultimo = novo;
         tamanho++;
     }
 
-    @Override
     public void adicionaFim(Object elemento) {
-        No novo = new No(ultimo, elemento, null);
-        if (ultimo != null) {
-            ultimo.setProximo(novo);
-        }
+        NoLista novo = new NoLista(ultimo, elemento, null);
+        if (ultimo != null) ultimo.setProximo(novo);
         ultimo = novo;
-        if (primeiro == null) {
-            primeiro = novo;
-        }
+        if (primeiro == null) primeiro = novo;
         tamanho++;
     }
 
-    @Override
     public void adicionaPosicao(int posicao, Object elemento) {
-        if (posicao < 0 || posicao > tamanho) {
-            throw new IndexOutOfBoundsException("Posição inválida: " + posicao);
-        }
-        if (posicao == 0) {
-            adicionaInicio(elemento);
-            return;
-        }
-        if (posicao == tamanho) {
-            adicionaFim(elemento);
-            return;
-        }
-        No atual = primeiro;
-        for (int i = 0; i < posicao; i++) {
-            atual = atual.getProximo();
-        }
-        No anterior = atual.getAnterior();
-        No novo = new No(anterior, elemento, atual);
+        if (posicao < 0 || posicao > tamanho) throw new IndexOutOfBoundsException();
+        if (posicao == 0) { adicionaInicio(elemento); return; }
+        if (posicao == tamanho) { adicionaFim(elemento); return; }
+        NoLista atual = primeiro;
+        for (int i = 0; i < posicao; i++) atual = atual.getProximo();
+        NoLista anterior = atual.getAnterior();
+        NoLista novo = new NoLista(anterior, elemento, atual);
         anterior.setProximo(novo);
         atual.setAnterior(novo);
         tamanho++;
     }
 
-    @Override
     public Object pega(int posicao) {
-        if (posicao < 0 || posicao >= tamanho) {
-            throw new IndexOutOfBoundsException("Posição inválida: " + posicao);
-        }
-        No atual = primeiro;
-        for (int i = 0; i < posicao; i++) {
-            atual = atual.getProximo();
-        }
+        if (posicao < 0 || posicao >= tamanho) throw new IndexOutOfBoundsException();
+        NoLista atual = primeiro;
+        for (int i = 0; i < posicao; i++) atual = atual.getProximo();
         return atual.getElemento();
     }
 
-    @Override
     public void removeInicio() {
-        if (primeiro == null) {
-            throw new IllegalStateException("Lista vazia");
-        }
+        if (primeiro == null) throw new IllegalStateException("Lista vazia");
         if (primeiro == ultimo) {
             primeiro = null;
             ultimo = null;
@@ -88,11 +63,8 @@ public class ListaDuplamenteLigada implements InterfaceGeral {
         tamanho--;
     }
 
-    @Override
     public void removeFim() {
-        if (ultimo == null) {
-            throw new IllegalStateException("Lista vazia");
-        }
+        if (ultimo == null) throw new IllegalStateException("Lista vazia");
         if (primeiro == ultimo) {
             primeiro = null;
             ultimo = null;
@@ -103,83 +75,63 @@ public class ListaDuplamenteLigada implements InterfaceGeral {
         tamanho--;
     }
 
-    @Override
     public void removePosicao(int posicao) {
-        if (posicao < 0 || posicao >= tamanho) {
-            throw new IndexOutOfBoundsException("Posição inválida: " + posicao);
-        }
-        if (posicao == 0) {
-            removeInicio();
-            return;
-        }
-        if (posicao == tamanho - 1) {
-            removeFim();
-            return;
-        }
-        No remover = primeiro;
-        for (int i = 0; i < posicao; i++) {
-            remover = remover.getProximo();
-        }
-        No anterior = remover.getAnterior();
-        No proximo = remover.getProximo();
+        if (posicao < 0 || posicao >= tamanho) throw new IndexOutOfBoundsException();
+        if (posicao == 0) { removeInicio(); return; }
+        if (posicao == tamanho - 1) { removeFim(); return; }
+        NoLista remover = primeiro;
+        for (int i = 0; i < posicao; i++) remover = remover.getProximo();
+        NoLista anterior = remover.getAnterior();
+        NoLista proximo = remover.getProximo();
         anterior.setProximo(proximo);
         proximo.setAnterior(anterior);
         tamanho--;
     }
 
-    @Override
+    public void remover(Object elemento) {
+        NoLista atual = primeiro;
+        while (atual != null && !atual.getElemento().equals(elemento)) {
+            atual = atual.getProximo();
+        }
+        if (atual == null) return;
+        if (atual == primeiro) {
+            removeInicio();
+        } else if (atual == ultimo) {
+            removeFim();
+        } else {
+            NoLista ant = atual.getAnterior();
+            NoLista prox = atual.getProximo();
+            ant.setProximo(prox);
+            prox.setAnterior(ant);
+            tamanho--;
+        }
+    }
+
     public boolean contem(Object elemento) {
-        No atual = primeiro;
+        NoLista atual = primeiro;
         while (atual != null) {
-            if (atual.getElemento().equals(elemento)) {
-                return true;
-            }
+            if (atual.getElemento().equals(elemento)) return true;
             atual = atual.getProximo();
         }
         return false;
     }
 
-    @Override
-    public int tamanho() {
-        return tamanho;
-    }
+    public int size() { return tamanho; }
+    public int tamanho() { return tamanho; }
+    public boolean isEmpty() { return tamanho == 0; }
 
-    // Método auxiliar para impressão (não faz parte da interface, mas útil)
-    public void imprimir() {
-        No atual = primeiro;
-        System.out.print("[");
-        while (atual != null) {
-            System.out.print(atual.getElemento());
-            if (atual.getProximo() != null) System.out.print(", ");
-            atual = atual.getProximo();
-        }
-        System.out.println("]");
-    }
-
-    // Impressão em ordem inversa (conforme página 11 do material)
-    public void imprimirInverso() {
-        No atual = ultimo;
-        System.out.print("[");
-        while (atual != null) {
-            System.out.print(atual.getElemento());
-            if (atual.getAnterior() != null) System.out.print(", ");
-            atual = atual.getAnterior();
-        }
-        System.out.println("]");
-    }
-
-    // Método para converter para array (útil para respostas JSON)
     public Object[] toArray() {
-        Object[] array = new Object[tamanho];
-        No atual = primeiro;
+        Object[] arr = new Object[tamanho];
+        NoLista atual = primeiro;
         for (int i = 0; i < tamanho; i++) {
-            array[i] = atual.getElemento();
+            arr[i] = atual.getElemento();
             atual = atual.getProximo();
         }
-        return array;
+        return arr;
     }
 
-    public boolean isEmpty() {
-        return tamanho == 0;
+    // Para compatibilidade com código que usa ListaLigada.get(i)
+    public Object get(int index) {
+        return pega(index);
     }
 }
