@@ -17,7 +17,6 @@ export const PONTOS_DA_CIDADE: PontoCidade[] = [
   { id: "p5", nome: "Café Costa", tipo: "restaurante", posicao: [-30.07, 3.5, -37.23] },
 
   // --- WAYPOINTS (ESQUINAS INVISÍVEIS PARA CRIAÇÃO DAS ROTAS) ---
-  // Bloco 1: Arredores da Fonte de Água e Hotel Central
   { id: "w1", nome: "", tipo: "waypoint", posicao: [-24.98, 0.41, -45.02] },
   { id: "w2", nome: "", tipo: "waypoint", posicao: [-27.54, 0.41, -47.50] },
   { id: "w3", nome: "", tipo: "waypoint", posicao: [-28.76, 0.41, -46.31] },
@@ -58,22 +57,21 @@ export const PONTOS_DA_CIDADE: PontoCidade[] = [
 ];
 
 interface MapMarkersProps {
-  onSelectPOI: (nome: string) => void;
+  onSelectPOI: (id: string, nome: string) => void;  // ALTERADO: agora passa id e nome
 }
 
 export function MapMarkers({ onSelectPOI }: MapMarkersProps) {
   return (
     <>
-      {/* O .filter garante que apenas os locais com nome ganhem o balão HTML na tela */}
       {PONTOS_DA_CIDADE.filter((poi) => poi.nome !== "").map((poi) => (
         <mesh key={poi.id} position={poi.posicao}>
           <Html 
             center 
-            distanceFactor={22} // Aumentei um pouco para estabilizar o tamanho com o zoom
+            distanceFactor={22}
             style={{ transition: 'all 0.2s', pointerEvents: 'auto' }}
           >
             <button
-              onClick={() => onSelectPOI(poi.nome)}
+              onClick={() => onSelectPOI(poi.id, poi.nome)}  // ALTERADO: passa id e nome
               className="flex items-center gap-2 rounded-full bg-white px-3 py-1.5 shadow-md border border-gray-100 hover:scale-105 active:scale-95 transition-all whitespace-nowrap cursor-pointer select-none font-sans"
             >
               <span className="text-sm">

@@ -1,10 +1,10 @@
-package com.mova.structures.Pilha;
+package com.mova.structures;
 
 public interface InterfacePilha {
-    void push(Object element);         // insere no topo
-    void pop();                        // remove do topo
-    Object peek();                     // devolve o topo sem remover
-    Object peekAndPop();               // devolve e remove o topo
+    void push(Object element);
+    Object pop();       // agora retorna Object
+    Object peek();
+    Object peekAndPop();
     boolean isEmpty();
     int size();
 }

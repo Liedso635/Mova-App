@@ -1,6 +1,5 @@
 package com.mova.structures;
 
-
 public class Grafo implements InterfaceGrafo {
     private ListaDuplamenteLigada vertices;  // lista de NoGrafo
 
@@ -307,15 +306,15 @@ public class Grafo implements InterfaceGrafo {
             }
         }
 
-        // Reconstrói caminho
+        // Reconstrói caminho (CORRIGIDO: adicionaInicio em vez de adicionarInicio)
         ListaDuplamenteLigada caminho = new ListaDuplamenteLigada();
         if (dist[idxDestino] == Double.POSITIVE_INFINITY) return caminho;
         int atual = idxDestino;
         while (atual != idxOrigem) {
-            caminho.adicionarInicio(((NoGrafo) vertices.pega(atual)).getElemento());
+            caminho.adicionaInicio(((NoGrafo) vertices.pega(atual)).getElemento());
             atual = prev[atual];
         }
-        caminho.adicionarInicio(origemId);
+        caminho.adicionaInicio(origemId);
         return caminho;
     }
 

@@ -1,4 +1,4 @@
-package com.mova.structures.Fila;
+package com.mova.structures;
 
 public class Fila implements InterfaceFila {
     private ListaDuplamenteLigada lista;
@@ -13,9 +13,11 @@ public class Fila implements InterfaceFila {
     }
 
     @Override
-    public void dequeue() {
-        if (isEmpty()) throw new IllegalStateException("Fila vazia");
+    public Object dequeue() {
+        if (isEmpty()) return null;
+        Object front = lista.pega(0);
         lista.removeInicio();
+        return front;
     }
 
     @Override
@@ -26,18 +28,18 @@ public class Fila implements InterfaceFila {
 
     @Override
     public Object peekAndDequeue() {
-        Object elemento = peek();
+        Object element = peek();
         dequeue();
-        return elemento;
+        return element;
     }
 
     @Override
     public boolean isEmpty() {
-        return lista.tamanho() == 0;
+        return lista.isEmpty();
     }
 
     @Override
     public int size() {
-        return lista.tamanho();
+        return lista.size();
     }
 }

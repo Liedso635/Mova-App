@@ -1,4 +1,5 @@
 package com.mova.structures;
+
 public class Pilha implements InterfacePilha {
     private ListaDuplamenteLigada lista;
 
@@ -8,13 +9,15 @@ public class Pilha implements InterfacePilha {
 
     @Override
     public void push(Object element) {
-        lista.adicionaInicio(element);   // topo = início
+        lista.adicionaInicio(element);
     }
 
     @Override
-    public void pop() {
-        if (isEmpty()) throw new IllegalStateException("Pilha vazia");
+    public Object pop() {
+        if (isEmpty()) return null;
+        Object topo = lista.pega(0);
         lista.removeInicio();
+        return topo;
     }
 
     @Override
@@ -25,18 +28,18 @@ public class Pilha implements InterfacePilha {
 
     @Override
     public Object peekAndPop() {
-        Object elemento = peek();
+        Object element = peek();
         pop();
-        return elemento;
+        return element;
     }
 
     @Override
     public boolean isEmpty() {
-        return lista.tamanho() == 0;
+        return lista.isEmpty();
     }
 
     @Override
     public int size() {
-        return lista.tamanho();
+        return lista.size();
     }
 }
