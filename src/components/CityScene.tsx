@@ -1,5 +1,5 @@
-import { Suspense, useEffect } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
+import { Suspense, useEffect, useRef } from "react";
+import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { useGLTF, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { MapMarkers } from "./Marcadores";
@@ -96,13 +96,46 @@ function Lights() {
   );
 }
 
-function Quadrado() {
+const carroRef = { current: null as THREE.Group | null };
+
+function Carro() {
+  const { scene } = useGLTF("/car1.glb");
+
+  useEffect(() => {
+    scene.traverse((obj) => {
+      if ((obj as THREE.Mesh).isMesh) {
+        const mesh = obj as THREE.Mesh;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+      }
+    });
+  }, [scene]);
+
   return (
-    <mesh position={[-24.98, 0.5, -45.02]} rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[0.3, 0.3]} />
-      <meshStandardMaterial color="red" side={THREE.DoubleSide} />
-    </mesh>
+    <primitive
+      ref={carroRef}
+      object={scene}
+      position={[-24.98, 0.36, -45.02]}
+      scale={[0.05, 0.04, 0.05]} // ← ajusta aqui o tamanho
+        rotation={[
+    THREE.MathUtils.degToRad(0),   // X
+    THREE.MathUtils.degToRad(-130),  // Y ← muda este valor
+    THREE.MathUtils.degToRad(0),   // Z
+  ]}
+    />
   );
+}
+
+function SeguirCarro({ controlsRef }: { controlsRef: React.RefObject<any> }) {
+  useFrame(() => {
+    if (!carroRef.current || !controlsRef.current) return;
+
+    const pos = carroRef.current.position;
+    controlsRef.current.target.set(pos.x, pos.y, pos.z);
+    controlsRef.current.update();
+  });
+
+  return null;
 }
 
 function CityModel() {
@@ -125,9 +158,9 @@ function CityModel() {
   return <primitive object={scene} />;
 }
 
-const ALVO = new THREE.Vector3(-24.98, 0.5, -45.02);
-
 export default function CityScene() {
+  const controlsRef = useRef(null);
+
   return (
     <div style={{ width: "100%", height: "100%", position: "relative" }}>
       <div
@@ -153,22 +186,24 @@ export default function CityScene() {
           position: [-22.99, 1.48, -42.96],
           fov: 40,
           near: 0.001,
-          far: 50,
+          far: 500,
         }}
       >
         <SceneSetup />
         <CameraInfo />
+        <SeguirCarro controlsRef={controlsRef} />
 
         <Lights />
 
         <Suspense fallback={null}>
           <CityModel />
-          <Quadrado />
+          <Carro />
           <MapMarkers onSelectPOI={(nome) => console.log("Clicou em:", nome)} />
         </Suspense>
 
         <OrbitControls
-          target={ALVO}
+          ref={controlsRef}
+          target={[-24.98, 0.5, -45.02]}
           enablePan={true}
           enableZoom={true}
           enableRotate={true}
