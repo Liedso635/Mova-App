@@ -1,11 +1,11 @@
-package com.mova.structures.BST;
+package com.mova.structures;
 
 public class NoBST {
     private NoBST esq;
     private NoBST dir;
-    private Comparable<Object> info;
+    private Comparable<?> info;
 
-    public NoBST(Comparable<Object> info) {
+    public NoBST(Comparable<?> info) {
         this.info = info;
     }
 
@@ -13,6 +13,6 @@ public class NoBST {
     public void setEsq(NoBST esq) { this.esq = esq; }
     public NoBST getDir() { return dir; }
     public void setDir(NoBST dir) { this.dir = dir; }
-    public Comparable<Object> getInfo() { return info; }
-    public void setInfo(Comparable<Object> info) { this.info = info; }
+    public Comparable<?> getInfo() { return info; }
+    public void setInfo(Comparable<?> info) { this.info = info; }
 }

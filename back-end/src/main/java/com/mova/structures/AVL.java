@@ -1,5 +1,5 @@
-package com.mova.structures.AVL;
-import com.mova.structures.ListaDuplamenteLigada.ListaDuplamenteLigada;
+package com.mova.structures;
+
 public class AVL {
     private NoAVL raiz;
 
@@ -31,50 +31,51 @@ public class AVL {
         return y;
     }
 
-    public void inserir(Comparable<Object> info) {
-        raiz = inserirRec(raiz, info);
+    @SuppressWarnings("unchecked")
+    public void inserir(Comparable<?> info) {
+        raiz = inserirRec(raiz, (Comparable<Object>) info);
     }
 
     private NoAVL inserirRec(NoAVL no, Comparable<Object> info) {
         if (no == null) return new NoAVL(info);
-        if (info.compareTo(no.getInfo()) < 0)
+        // Como no.getInfo() é Comparable<?>, precisamos de cast para Comparable<Object> para usar compareTo
+        Comparable<Object> noInfo = (Comparable<Object>) no.getInfo();
+        if (info.compareTo(noInfo) < 0)
             no.setEsq(inserirRec(no.getEsq(), info));
-        else if (info.compareTo(no.getInfo()) > 0)
+        else if (info.compareTo(noInfo) > 0)
             no.setDir(inserirRec(no.getDir(), info));
         else
-            return no; // duplicado
+            return no;
 
         no.setAltura(1 + Math.max(altura(no.getEsq()), altura(no.getDir())));
         int balance = fatorBalanceamento(no);
 
-        // LL
-        if (balance > 1 && info.compareTo(no.getEsq().getInfo()) < 0)
+        if (balance > 1 && info.compareTo((Comparable<Object>) no.getEsq().getInfo()) < 0)
             return rotacaoDireita(no);
-        // RR
-        if (balance < -1 && info.compareTo(no.getDir().getInfo()) > 0)
+        if (balance < -1 && info.compareTo((Comparable<Object>) no.getDir().getInfo()) > 0)
             return rotacaoEsquerda(no);
-        // LR
-        if (balance > 1 && info.compareTo(no.getEsq().getInfo()) > 0) {
+        if (balance > 1 && info.compareTo((Comparable<Object>) no.getEsq().getInfo()) > 0) {
             no.setEsq(rotacaoEsquerda(no.getEsq()));
             return rotacaoDireita(no);
         }
-        // RL
-        if (balance < -1 && info.compareTo(no.getDir().getInfo()) < 0) {
+        if (balance < -1 && info.compareTo((Comparable<Object>) no.getDir().getInfo()) < 0) {
             no.setDir(rotacaoDireita(no.getDir()));
             return rotacaoEsquerda(no);
         }
         return no;
     }
 
-    public void remover(Comparable<Object> info) {
-        raiz = removerRec(raiz, info);
+    @SuppressWarnings("unchecked")
+    public void remover(Comparable<?> info) {
+        raiz = removerRec(raiz, (Comparable<Object>) info);
     }
 
     private NoAVL removerRec(NoAVL no, Comparable<Object> info) {
         if (no == null) return null;
-        if (info.compareTo(no.getInfo()) < 0)
+        Comparable<Object> noInfo = (Comparable<Object>) no.getInfo();
+        if (info.compareTo(noInfo) < 0)
             no.setEsq(removerRec(no.getEsq(), info));
-        else if (info.compareTo(no.getInfo()) > 0)
+        else if (info.compareTo(noInfo) > 0)
             no.setDir(removerRec(no.getDir(), info));
         else {
             if (no.getEsq() == null || no.getDir() == null) {
@@ -84,24 +85,20 @@ public class AVL {
             } else {
                 NoAVL temp = minValorNo(no.getDir());
                 no.setInfo(temp.getInfo());
-                no.setDir(removerRec(no.getDir(), temp.getInfo()));
+                no.setDir(removerRec(no.getDir(), (Comparable<Object>) temp.getInfo()));
             }
         }
         if (no == null) return null;
         no.setAltura(1 + Math.max(altura(no.getEsq()), altura(no.getDir())));
         int balance = fatorBalanceamento(no);
-        // LL
         if (balance > 1 && fatorBalanceamento(no.getEsq()) >= 0)
             return rotacaoDireita(no);
-        // LR
         if (balance > 1 && fatorBalanceamento(no.getEsq()) < 0) {
             no.setEsq(rotacaoEsquerda(no.getEsq()));
             return rotacaoDireita(no);
         }
-        // RR
         if (balance < -1 && fatorBalanceamento(no.getDir()) <= 0)
             return rotacaoEsquerda(no);
-        // RL
         if (balance < -1 && fatorBalanceamento(no.getDir()) > 0) {
             no.setDir(rotacaoDireita(no.getDir()));
             return rotacaoEsquerda(no);
@@ -128,25 +125,25 @@ public class AVL {
         }
     }
 
-    public boolean existe(Comparable<Object> info) {
-        return existeRec(raiz, info);
+    @SuppressWarnings("unchecked")
+    public boolean existe(Comparable<?> info) {
+        return existeRec(raiz, (Comparable<Object>) info);
     }
 
     private boolean existeRec(NoAVL no, Comparable<Object> info) {
         if (no == null) return false;
-        if (info.compareTo(no.getInfo()) == 0) return true;
-        if (info.compareTo(no.getInfo()) < 0)
+        Comparable<Object> noInfo = (Comparable<Object>) no.getInfo();
+        if (info.compareTo(noInfo) == 0) return true;
+        if (info.compareTo(noInfo) < 0)
             return existeRec(no.getEsq(), info);
         else
             return existeRec(no.getDir(), info);
     }
 
-    // Método auxiliar para obter a raiz (caso necessário)
     public NoAVL getRaiz() {
         return raiz;
     }
 
-    // Método para listar em ordem retornando ListaDuplamenteLigada (útil para viagens)
     public ListaDuplamenteLigada listarInOrder() {
         ListaDuplamenteLigada lista = new ListaDuplamenteLigada();
         inOrderListaRec(raiz, lista);

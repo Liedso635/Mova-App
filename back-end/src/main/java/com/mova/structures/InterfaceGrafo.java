@@ -1,5 +1,5 @@
-package com.mova.structures.Grafos;
-import com.mova.structures.ListaDuplamenteLigada.ListaDuplamenteLigada;
+package com.mova.structures;
+
 public interface InterfaceGrafo {
     void adicionarVertice(Object elemento);
     void adicionaAresta(Object elem1, Object elem2, double peso);

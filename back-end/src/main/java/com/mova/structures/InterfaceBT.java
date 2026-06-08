@@ -1,9 +1,9 @@
-package com.mova.structures.BST;
+package com.mova.structures;
 
 public interface InterfaceBT {
-    void inserir(Comparable<Object> info);
+    void inserir(Comparable<?> info);
     void listInOrder();
     void listPreorder();
     void listPosOrder();
-    boolean existe(Comparable<Object> info);
+    boolean existe(Comparable<?> info);
 }

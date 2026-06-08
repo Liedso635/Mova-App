@@ -1,4 +1,4 @@
-package com.mova.structures.ListaDuplamenteLigada;
+package com.mova.structures;
 
 public interface InterfaceGeral {
     void adicionaInicio(Object elemento);

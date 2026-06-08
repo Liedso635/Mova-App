@@ -3,9 +3,10 @@ package com.mova.structures;
 public class BST implements InterfaceBT {
     private NoBST raiz;
 
+    @SuppressWarnings("unchecked")
     @Override
-    public void inserir(Comparable<Object> info) {
-        raiz = inserirRec(raiz, info);
+    public void inserir(Comparable<?> info) {
+        raiz = inserirRec(raiz, (Comparable<Object>) info);
     }
 
     private NoBST inserirRec(NoBST no, Comparable<Object> info) {
@@ -59,9 +60,10 @@ public class BST implements InterfaceBT {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public boolean existe(Comparable<Object> info) {
-        return existeRec(raiz, info);
+    public boolean existe(Comparable<?> info) {
+        return existeRec(raiz, (Comparable<Object>) info);
     }
 
     private boolean existeRec(NoBST no, Comparable<Object> info) {

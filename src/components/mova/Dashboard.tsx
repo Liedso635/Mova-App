@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -10,8 +10,8 @@ import {
   X,
   MapPin,
 } from "lucide-react";
-import CityScene from "./CityScene";
-import { PONTOS_DA_CIDADE } from "./Marcadores";
+import CityScene from "../CityScene";               // ← corrigido
+import { PONTOS_DA_CIDADE } from "../Marcadores";   // ← corrigido
 import { RouteLine } from "./RouteLine";
 import { solicitarViagem } from "@/lib/api/movaApi";
 
@@ -46,7 +46,6 @@ export function Dashboard({ kind }: { kind: Kind }) {
     navigate({ to: "/" });
   };
 
-  // CORREÇÃO AQUI:
   const stored = (() => {
     const data = localStorage.getItem(`mova_${kind}`);
     if (!data) return null;
@@ -89,6 +88,12 @@ export function Dashboard({ kind }: { kind: Kind }) {
     }
   };
 
+  const getPontoNome = (id: string | null) => {
+    if (!id) return "";
+    const ponto = PONTOS_DA_CIDADE.find(p => p.id === id);
+    return ponto?.nome || id;
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar desktop */}
@@ -120,7 +125,7 @@ export function Dashboard({ kind }: { kind: Kind }) {
       <main className="relative flex flex-1 pb-20 md:pb-0" style={{ minHeight: "100dvh" }}>
         <div className="absolute inset-0">
           <CityScene onSelectPOI={handleSelectPOI}>
-            <RouteLine rotaIds={rotaIds} />
+            <RouteLine rotaIds={rotaIds} pontos={PONTOS_DA_CIDADE} />
           </CityScene>
         </div>
 
@@ -129,7 +134,7 @@ export function Dashboard({ kind }: { kind: Kind }) {
           {origemId ? (
             <div className="flex items-center gap-2">
               <span className="font-semibold">Origem:</span>
-              <span>{PONTOS_DA_CIDADE.find(p => p.id === origemId)?.nome || origemId}</span>
+              <span>{getPontoNome(origemId)}</span>
               <button onClick={() => setOrigemId(null)} className="text-red-500 hover:text-red-700">✕</button>
             </div>
           ) : (
@@ -138,7 +143,7 @@ export function Dashboard({ kind }: { kind: Kind }) {
           {destinoId ? (
             <div className="flex items-center gap-2">
               <span className="font-semibold">Destino:</span>
-              <span>{PONTOS_DA_CIDADE.find(p => p.id === destinoId)?.nome || destinoId}</span>
+              <span>{getPontoNome(destinoId)}</span>
               <button onClick={() => setDestinoId(null)} className="text-red-500 hover:text-red-700">✕</button>
             </div>
           ) : (
@@ -160,7 +165,7 @@ export function Dashboard({ kind }: { kind: Kind }) {
         </button>
       </nav>
 
-      {/* Modais */}
+      {/* Modals */}
       <AnimatePresence>
         {modal && (
           <motion.div
@@ -201,8 +206,8 @@ export function Dashboard({ kind }: { kind: Kind }) {
                   ) : (
                     <>
                       <p className="text-gray-600">
-                        Origem: {PONTOS_DA_CIDADE.find(p => p.id === origemId)?.nome || origemId}<br />
-                        Destino: {PONTOS_DA_CIDADE.find(p => p.id === destinoId)?.nome || destinoId}
+                        Origem: {getPontoNome(origemId)}<br />
+                        Destino: {getPontoNome(destinoId)}
                       </p>
                       <button onClick={handleConfirmar} className="mova-interactive mt-6 w-full rounded-xl py-3 text-sm font-semibold text-white" style={{ backgroundColor: "#041037" }}>
                         Confirmar

@@ -1,13 +1,12 @@
 package com.mova.structures;
 
 public class Grafo implements InterfaceGrafo {
-    private ListaDuplamenteLigada vertices;  // lista de NoGrafo
+    private ListaDuplamenteLigada vertices;
 
     public Grafo() {
         vertices = new ListaDuplamenteLigada();
     }
 
-    // ---------- Métodos auxiliares privados ----------
     private NoGrafo buscarNo(Object elemento) {
         for (int i = 0; i < vertices.size(); i++) {
             NoGrafo no = (NoGrafo) vertices.pega(i);
@@ -16,7 +15,6 @@ public class Grafo implements InterfaceGrafo {
         return null;
     }
 
-    // ---------- Implementação da interface ----------
     @Override
     public void adicionarVertice(Object elemento) {
         if (!existeVertice(elemento)) {
@@ -30,7 +28,7 @@ public class Grafo implements InterfaceGrafo {
         NoGrafo no2 = buscarNo(elem2);
         if (no1 != null && no2 != null) {
             no1.adicionaVizinho(no2, peso);
-            no2.adicionaVizinho(no1, peso);  // grafo não direcionado
+            no2.adicionaVizinho(no1, peso);
         }
     }
 
@@ -38,7 +36,6 @@ public class Grafo implements InterfaceGrafo {
     public void removeVertice(Object elemento) {
         NoGrafo remover = buscarNo(elemento);
         if (remover == null) return;
-        // Remove todas as arestas que apontam para este vértice
         for (int i = 0; i < vertices.size(); i++) {
             NoGrafo no = (NoGrafo) vertices.pega(i);
             ListaDuplamenteLigada viz = no.getVizinhos();
@@ -58,7 +55,6 @@ public class Grafo implements InterfaceGrafo {
         NoGrafo no1 = buscarNo(elem1);
         NoGrafo no2 = buscarNo(elem2);
         if (no1 == null || no2 == null) return;
-        // Remove de no1 a aresta para no2
         ListaDuplamenteLigada viz1 = no1.getVizinhos();
         for (int i = 0; i < viz1.size(); i++) {
             NoGrafo.Aresta a = (NoGrafo.Aresta) viz1.pega(i);
@@ -67,7 +63,6 @@ public class Grafo implements InterfaceGrafo {
                 break;
             }
         }
-        // Remove de no2 a aresta para no1
         ListaDuplamenteLigada viz2 = no2.getVizinhos();
         for (int i = 0; i < viz2.size(); i++) {
             NoGrafo.Aresta a = (NoGrafo.Aresta) viz2.pega(i);
@@ -119,7 +114,6 @@ public class Grafo implements InterfaceGrafo {
             NoGrafo no = (NoGrafo) vertices.pega(i);
             for (int j = 0; j < no.getVizinhos().size(); j++) {
                 NoGrafo.Aresta a = (NoGrafo.Aresta) no.getVizinhos().pega(j);
-                // Evita duplicar (grafo não direcionado)
                 if (no.getElemento().toString().compareTo(a.getDestino().getElemento().toString()) < 0) {
                     arestas.adicionar("(" + no.getElemento() + "," + a.getDestino().getElemento() + ")");
                 }
@@ -149,25 +143,18 @@ public class Grafo implements InterfaceGrafo {
         }
     }
 
-    // ---------- BFS (busca em largura) ----------
+    // BFS
     public void bfs(Object inicio) {
         NoGrafo noInicio = buscarNo(inicio);
         if (noInicio == null) return;
-
-        // Reset visitados
-        for (int i = 0; i < vertices.size(); i++) {
-            ((NoGrafo) vertices.pega(i)).setVisitado(false);
-        }
-
+        for (int i = 0; i < vertices.size(); i++) ((NoGrafo) vertices.pega(i)).setVisitado(false);
         Fila fila = new Fila();
         noInicio.setVisitado(true);
         fila.enqueue(noInicio);
-
         while (!fila.isEmpty()) {
             NoGrafo atual = (NoGrafo) fila.dequeue();
             System.out.print(atual.getElemento() + " ");
-
-            for (int i = 0; i < atual.getVizinhos().tamanho(); i++) {
+            for (int i = 0; i < atual.getVizinhos().size(); i++) {
                 NoGrafo.Aresta a = (NoGrafo.Aresta) atual.getVizinhos().pega(i);
                 NoGrafo viz = a.getDestino();
                 if (!viz.isVisitado()) {
@@ -179,50 +166,36 @@ public class Grafo implements InterfaceGrafo {
         System.out.println();
     }
 
-    // ---------- DFS (busca em profundidade) usando pilha ----------
+    // DFS
     public void dfs(Object inicio) {
         NoGrafo noInicio = buscarNo(inicio);
         if (noInicio == null) return;
-
-        for (int i = 0; i < vertices.size(); i++) {
-            ((NoGrafo) vertices.pega(i)).setVisitado(false);
-        }
-
+        for (int i = 0; i < vertices.size(); i++) ((NoGrafo) vertices.pega(i)).setVisitado(false);
         Pilha pilha = new Pilha();
         pilha.push(noInicio);
-
         while (!pilha.isEmpty()) {
             NoGrafo atual = (NoGrafo) pilha.pop();
             if (!atual.isVisitado()) {
                 atual.setVisitado(true);
                 System.out.print(atual.getElemento() + " ");
-                // Empilha vizinhos (ordem inversa para manter ordem do material)
                 for (int i = atual.getVizinhos().size() - 1; i >= 0; i--) {
                     NoGrafo.Aresta a = (NoGrafo.Aresta) atual.getVizinhos().pega(i);
                     NoGrafo viz = a.getDestino();
-                    if (!viz.isVisitado()) {
-                        pilha.push(viz);
-                    }
+                    if (!viz.isVisitado()) pilha.push(viz);
                 }
             }
         }
         System.out.println();
     }
 
-    // ---------- Existe caminho entre origem e destino (usa BFS) ----------
     public boolean existeCaminho(Object origem, Object destino) {
         NoGrafo noOrigem = buscarNo(origem);
         NoGrafo noDestino = buscarNo(destino);
         if (noOrigem == null || noDestino == null) return false;
-
-        for (int i = 0; i < vertices.size(); i++) {
-            ((NoGrafo) vertices.pega(i)).setVisitado(false);
-        }
-
+        for (int i = 0; i < vertices.size(); i++) ((NoGrafo) vertices.pega(i)).setVisitado(false);
         Fila fila = new Fila();
         noOrigem.setVisitado(true);
         fila.enqueue(noOrigem);
-
         while (!fila.isEmpty()) {
             NoGrafo atual = (NoGrafo) fila.dequeue();
             if (atual == noDestino) return true;
@@ -238,20 +211,14 @@ public class Grafo implements InterfaceGrafo {
         return false;
     }
 
-    // ---------- Conta vértices alcançáveis a partir de um vértice ----------
     public int contarVerticesAlcancaveis(Object inicio) {
         NoGrafo noInicio = buscarNo(inicio);
         if (noInicio == null) return 0;
-
-        for (int i = 0; i < vertices.size(); i++) {
-            ((NoGrafo) vertices.pega(i)).setVisitado(false);
-        }
-
+        for (int i = 0; i < vertices.size(); i++) ((NoGrafo) vertices.pega(i)).setVisitado(false);
         Fila fila = new Fila();
         noInicio.setVisitado(true);
         fila.enqueue(noInicio);
         int contador = 1;
-
         while (!fila.isEmpty()) {
             NoGrafo atual = (NoGrafo) fila.dequeue();
             for (int i = 0; i < atual.getVizinhos().size(); i++) {
@@ -267,7 +234,7 @@ public class Grafo implements InterfaceGrafo {
         return contador;
     }
 
-    // ---------- DIJKSTRA (caminho mínimo com pesos) ----------
+    // DIJKSTRA (corrigido)
     public ListaDuplamenteLigada dijkstra(Object origemId, Object destinoId) {
         NoGrafo origem = buscarNo(origemId);
         NoGrafo destino = buscarNo(destinoId);
@@ -306,7 +273,6 @@ public class Grafo implements InterfaceGrafo {
             }
         }
 
-        // Reconstrói caminho (CORRIGIDO: adicionaInicio em vez de adicionarInicio)
         ListaDuplamenteLigada caminho = new ListaDuplamenteLigada();
         if (dist[idxDestino] == Double.POSITIVE_INFINITY) return caminho;
         int atual = idxDestino;

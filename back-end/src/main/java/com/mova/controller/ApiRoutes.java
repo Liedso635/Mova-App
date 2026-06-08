@@ -6,6 +6,8 @@ import com.mova.model.SolicitacaoViagem;
 import com.mova.model.Motorista;
 import com.mova.service.ViagemService;
 import com.mova.service.MotoristaService;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ApiRoutes {
     private static Gson gson = new Gson();
@@ -15,9 +17,16 @@ public class ApiRoutes {
     public static void init() {
         post("/api/viagens/solicitar", (req, res) -> {
             SolicitacaoViagem sol = gson.fromJson(req.body(), SolicitacaoViagem.class);
-            var resultado = viagemService.solicitarViagem(sol.getOrigemId(), sol.getDestinoId());
+            ViagemService.ResultadoViagem resultado = viagemService.solicitarViagem(sol.getOrigemId(), sol.getDestinoId());
             res.type("application/json");
-            return gson.toJson(resultado);
+            
+            // Converte a lista ligada para array (evita StackOverflowError)
+            Object[] rotaIdsArray = resultado.rotaIds.toArray();
+            Map<String, Object> resposta = new HashMap<>();
+            resposta.put("rotaIds", rotaIdsArray);
+            resposta.put("distancia", resultado.distancia);
+            
+            return gson.toJson(resposta);
         });
 
         get("/api/motoristas", (req, res) -> {

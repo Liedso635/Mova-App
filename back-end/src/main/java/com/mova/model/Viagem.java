@@ -10,9 +10,12 @@ public class Viagem implements Comparable<Viagem> {
     private double distancia;
 
     public Viagem(int id, String origemId, String destinoId) {
-        this.id = id; this.origemId = origemId; this.destinoId = destinoId;
+        this.id = id;
+        this.origemId = origemId;
+        this.destinoId = destinoId;
         this.rotaIds = new ListaDuplamenteLigada();
     }
+
     public int getId() { return id; }
     public String getOrigemId() { return origemId; }
     public String getDestinoId() { return destinoId; }
