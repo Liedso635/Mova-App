@@ -66,7 +66,6 @@ export const ARESTAS: [string, string][] = [
   ["p3","w23"],
   ["p5","w13"],["p5","w14"],
 
-
 ["w1","w2"],["w2","w3"],["w3","w4"],
 ["w4","w5"],["w5","w6"],
 ["w6","w7"],["w7","w8"],["w8","w9"],["w9","w10"],
@@ -84,57 +83,9 @@ export const ARESTAS: [string, string][] = [
 ["w15", "w17"],
 ];
 
+// Lógica das arestas mantida — só o render das linhas foi removido
 function WaypointConnections() {
-  const pontoMap = new Map(PONTOS_DA_CIDADE.map((p) => [p.id, p]));
-
-  return (
-    <>
-      {/* Linhas brancas: arestas do grafo */}
-      {ARESTAS.map(([idA, idB]) => {
-        const a = pontoMap.get(idA);
-        const b = pontoMap.get(idB);
-        if (!a || !b) return null;
-        const [ax, ay, az] = a.posicao;
-        const [bx, by, bz] = b.posicao;
-        return (
-          <line key={`${idA}-${idB}`}>
-            <bufferGeometry attach="geometry">
-              <bufferAttribute
-                attach="attributes-position"
-                count={2}
-                array={new Float32Array([ax, ay + 0.25, az, bx, by + 0.25, bz])}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial color="#ffffff" linewidth={60} />
-          </line>
-        );
-      })}
-
-      {/* Labels verdes nos waypoints */}
-      {PONTOS_DA_CIDADE.filter((p) => p.tipo === "waypoint").map((poi) => {
-        const [x, y, z] = poi.posicao;
-        return (
-          <group key={poi.id} position={[x, y, z]}>
-            <Html center distanceFactor={18} style={{ pointerEvents: "none" }}>
-              <span
-                style={{
-                  color: "#16a34a",
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  whiteSpace: "nowrap",
-                  display: "inline-block",
-                  textAlign: "center",
-                }}
-              >
-                {poi.id}
-              </span>
-            </Html>
-          </group>
-        );
-      })}
-    </>
-  );
+  return null;
 }
 
 export function MapMarkers({ onSelectPOI }: MapMarkersProps) {

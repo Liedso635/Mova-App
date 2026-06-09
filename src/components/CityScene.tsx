@@ -174,18 +174,30 @@ function Carro({ origemId }: { origemId?: string | null }) {
 }
 
 // ─── SeguirCarro ───────────────────────────────────────────────────────────────
-// A câmara orbit segue o carro enquanto ele se move
+// Move câmara + target juntos para manter o offset (distância/ângulo) constante
 function SeguirCarro({ controlsRef }: { controlsRef: React.RefObject<any> }) {
+  const { camera } = useThree();
+  const prevTarget = useRef(new THREE.Vector3());
+
   useFrame(() => {
     if (!carroRef.current || !controlsRef.current) return;
     if (!rotaInterpolada.ativa && rotaInterpolada.progresso.current === 0) return;
 
-    const pos = carroRef.current.position;
-    controlsRef.current.target.lerp(
-      new THREE.Vector3(pos.x, pos.y, pos.z),
-      0.08 // suavização do alvo da câmara
-    );
+    const carroPos = carroRef.current.position;
+    const novoTarget = new THREE.Vector3(carroPos.x, carroPos.y, carroPos.z);
+
+    // Target suavizado frame a frame
+    const targetAtual = controlsRef.current.target as THREE.Vector3;
+    const targetSuave = targetAtual.clone().lerp(novoTarget, 0.08);
+
+    // Delta entre frame anterior e agora -> aplica à câmara para manter o offset
+    const delta = new THREE.Vector3().subVectors(targetSuave, prevTarget.current);
+    camera.position.add(delta);
+
+    controlsRef.current.target.copy(targetSuave);
     controlsRef.current.update();
+
+    prevTarget.current.copy(targetSuave);
   });
 
   return null;
