@@ -9,10 +9,12 @@ function SceneSetup() {
 
   useEffect(() => {
     gl.toneMapping = THREE.ACESFilmicToneMapping;
+    gl.toneMappingExposure = 1.05;
     gl.shadowMap.enabled = true;
     gl.shadowMap.type = THREE.PCFSoftShadowMap;
-
+    gl.outputColorSpace = THREE.SRGBColorSpace;
     scene.background = new THREE.Color("#b5b5b5");
+    scene.fog = new THREE.Fog("#b5b5b5", 160, 520);
 
     const handleCanvasClick = () => {
       const intersects = raycaster.intersectObjects(scene.children, true);
@@ -116,12 +118,12 @@ function Carro() {
       ref={carroRef}
       object={scene}
       position={[-24.98, 0.36, -45.02]}
-      scale={[0.05, 0.04, 0.05]} // ← ajusta aqui o tamanho
-        rotation={[
-    THREE.MathUtils.degToRad(0),   // X
-    THREE.MathUtils.degToRad(-130),  // Y ← muda este valor
-    THREE.MathUtils.degToRad(0),   // Z
-  ]}
+      scale={[0.05, 0.04, 0.05]}
+      rotation={[
+        THREE.MathUtils.degToRad(0),
+        THREE.MathUtils.degToRad(-130),
+        THREE.MathUtils.degToRad(0),
+      ]}
     />
   );
 }
@@ -140,7 +142,6 @@ function SeguirCarro({ controlsRef }: { controlsRef: React.RefObject<any> }) {
 
 function CityModel() {
   const { scene } = useGLTF("/city.glb");
-
   useEffect(() => {
     scene.traverse((obj) => {
       if ((obj as THREE.Mesh).isMesh) {
@@ -154,12 +155,16 @@ function CityModel() {
       }
     });
   }, [scene]);
-
   return <primitive object={scene} />;
 }
 
-export default function CityScene() {
-  const controlsRef = useRef(null);
+interface CitySceneProps {
+  onSelectPOI?: (id: string, nome: string) => void;
+  children?: React.ReactNode;
+}
+
+export default function CityScene({ onSelectPOI, children }: CitySceneProps) {
+  const controlsRef = useRef<any>(null);
 
   return (
     <div style={{ width: "100%", height: "100%", position: "relative" }}>
@@ -182,31 +187,24 @@ export default function CityScene() {
         style={{ width: "100%", height: "100%" }}
         dpr={[1, 2]}
         gl={{ antialias: true }}
-        camera={{
-          position: [-22.99, 1.48, -42.96],
-          fov: 40,
-          near: 0.001,
-          far: 500,
-        }}
+        camera={{ position: [-22.99, 1.48, -42.96], fov: 40, near: 0.001, far: 500 }}
       >
         <SceneSetup />
         <CameraInfo />
         <SeguirCarro controlsRef={controlsRef} />
-
         <Lights />
-
         <Suspense fallback={null}>
           <CityModel />
           <Carro />
-          <MapMarkers onSelectPOI={(nome) => console.log("Clicou em:", nome)} />
+          <MapMarkers onSelectPOI={onSelectPOI || ((id, nome) => console.log("Clicou em:", id, nome))} />
+          {children}
         </Suspense>
-
         <OrbitControls
           ref={controlsRef}
           target={[-24.98, 0.5, -45.02]}
-          enablePan={true}
-          enableZoom={true}
-          enableRotate={true}
+          enablePan
+          enableZoom
+          enableRotate
           minPolarAngle={0}
           maxPolarAngle={Math.PI / 2.1}
         />

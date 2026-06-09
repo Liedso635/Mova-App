@@ -1,11 +1,16 @@
 package com.mova.controller;
 
-import static spark.Spark.*;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.google.gson.Gson;
-import com.mova.model.SolicitacaoViagem;
 import com.mova.model.Motorista;
-import com.mova.service.ViagemService;
+import com.mova.model.SolicitacaoViagem;
 import com.mova.service.MotoristaService;
+import com.mova.service.ViagemService;
+
+import static spark.Spark.get;
+import static spark.Spark.post;
 
 public class ApiRoutes {
     private static Gson gson = new Gson();
@@ -15,9 +20,20 @@ public class ApiRoutes {
     public static void init() {
         post("/api/viagens/solicitar", (req, res) -> {
             SolicitacaoViagem sol = gson.fromJson(req.body(), SolicitacaoViagem.class);
-            var resultado = viagemService.solicitarViagem(sol.getOrigemId(), sol.getDestinoId());
+            ViagemService.ResultadoViagem resultado = viagemService.solicitarViagem(
+                sol.getOrigemId(),
+                sol.getDestinoId(),
+                sol.getPontos(),
+                sol.getArestas()
+            );
             res.type("application/json");
-            return gson.toJson(resultado);
+
+            Object[] rotaIdsArray = resultado.rotaIds.toArray();
+            Map<String, Object> resposta = new HashMap<>();
+            resposta.put("rotaIds", rotaIdsArray);
+            resposta.put("distancia", resultado.distancia);
+
+            return gson.toJson(resposta);
         });
 
         get("/api/motoristas", (req, res) -> {
