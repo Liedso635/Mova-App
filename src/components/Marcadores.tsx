@@ -17,49 +17,129 @@ export const PONTOS_DA_CIDADE: PontoCidade[] = [
   { id: "p5", nome: "Café Costa", tipo: "restaurante", posicao: [-30.07, 3.5, -37.23] },
 
   // --- WAYPOINTS (todos os que você tem) ---
-  { id: "w1", nome: "", tipo: "waypoint", posicao: [-24.98, 0.41, -45.02] },
-  { id: "w2", nome: "", tipo: "waypoint", posicao: [-27.54, 0.41, -47.50] },
-  { id: "w3", nome: "", tipo: "waypoint", posicao: [-28.76, 0.41, -46.31] },
-  { id: "w4", nome: "", tipo: "waypoint", posicao: [-26.31, 0.41, -43.77] },
-  { id: "w5", nome: "", tipo: "waypoint", posicao: [-25.02, 0.41, -49.87] },
-  { id: "w6", nome: "", tipo: "waypoint", posicao: [-22.52, 0.41, -47.52] },
-  { id: "w7", nome: "", tipo: "waypoint", posicao: [-23.42, 0.41, -45.07] },
-  { id: "w8", nome: "", tipo: "waypoint", posicao: [-23.71, 0.41, -43.84] },
-  { id: "w9", nome: "", tipo: "waypoint", posicao: [-25.10, 0.41, -42.39] },
-  { id: "w10", nome: "", tipo: "waypoint", posicao: [-26.28, 0.41, -41.17] },
-  { id: "w11", nome: "", tipo: "waypoint", posicao: [-27.52, 0.41, -42.65] },
-  { id: "w12", nome: "", tipo: "waypoint", posicao: [-22.48, 0.41, -52.58] },
-  { id: "w13", nome: "", tipo: "waypoint", posicao: [-23.85, 0.41, -53.82] },
-  { id: "w14", nome: "", tipo: "waypoint", posicao: [-26.25, 0.41, -51.14] },
-  { id: "w15", nome: "", tipo: "waypoint", posicao: [-28.72, 0.41, -48.74] },
-  { id: "w16", nome: "", tipo: "waypoint", posicao: [-29.82, 0.41, -47.46] },
-  { id: "w17", nome: "", tipo: "waypoint", posicao: [-28.64, 0.41, -46.28] },
-  { id: "w18", nome: "", tipo: "waypoint", posicao: [-30.05, 0.41, -44.88] },
-  { id: "w19", nome: "", tipo: "waypoint", posicao: [-31.10, 0.41, -45.98] },
-  { id: "w20", nome: "", tipo: "waypoint", posicao: [-27.48, 0.41, -39.93] },
-  { id: "w21", nome: "", tipo: "waypoint", posicao: [-27.32, 0.41, -38.01] },
-  { id: "w22", nome: "", tipo: "waypoint", posicao: [-25.04, 0.41, -39.98] },
-  { id: "w23", nome: "", tipo: "waypoint", posicao: [-27.50, 0.41, -35.88] },
-  { id: "w24", nome: "", tipo: "waypoint", posicao: [-24.19, 0.41, -41.26] },
-  { id: "w25", nome: "", tipo: "waypoint", posicao: [-29.74, 0.41, -37.23] },
-  { id: "w26", nome: "", tipo: "waypoint", posicao: [-28.80, 0.41, -41.33] },
-  { id: "w27", nome: "", tipo: "waypoint", posicao: [-30.26, 0.41, -42.57] },
-  { id: "w28", nome: "", tipo: "waypoint", posicao: [-34.22, 0.41, -42.25] },
-  { id: "w29", nome: "", tipo: "waypoint", posicao: [-32.61, 0.41, -39.95] },
-  { id: "w30", nome: "", tipo: "waypoint", posicao: [-34.18, 0.41, -37.58] },
-  { id: "w31", nome: "", tipo: "waypoint", posicao: [-31.30, 0.41, -37.45] }
+  { id: "w1", nome: "", tipo: "waypoint", posicao: [-24.98, 1.41, -45.02] },
+  { id: "w2", nome: "", tipo: "waypoint", posicao: [-27.54, 1.41, -47.50] },
+  { id: "w3", nome: "", tipo: "waypoint", posicao: [-28.76, 1.41, -46.31] },
+  { id: "w4", nome: "", tipo: "waypoint", posicao: [-26.31, 1.41, -43.77] },
+  { id: "w5", nome: "", tipo: "waypoint", posicao: [-27.54, 1.41, -42.65] },
 ];
 
 interface MapMarkersProps {
   onSelectPOI: (id: string, nome: string) => void;
 }
 
+function WaypointConnections() {
+  const waypoints = PONTOS_DA_CIDADE
+    .filter((poi) => poi.tipo === "waypoint")
+    .sort((a, b) => {
+      const na = Number(a.id.replace("w", ""));
+      const nb = Number(b.id.replace("w", ""));
+      return na - nb;
+    });
+
+  const pois = PONTOS_DA_CIDADE.filter((poi) => poi.nome !== "" && poi.tipo !== "waypoint");
+
+  if (waypoints.length < 2 || pois.length === 0) return null;
+
+  // Linha branca: segmentos explícitos w1→w2, w2→w3, w3→w4, w4→w5
+  const segmentos: Array<[number, number, number, number, number, number]> = [];
+  for (let i = 0; i < waypoints.length - 1; i++) {
+    const [x1, y1, z1] = waypoints[i].posicao;
+    const [x2, y2, z2] = waypoints[i + 1].posicao;
+    segmentos.push([x1, y1 + 0.25, z1, x2, y2 + 0.25, z2]);
+  }
+
+  // Linhas azuis: cada POI liga ao waypoint mais próximo (igual ao original)
+  const nearestConnections = pois.map((poi) => {
+    const [px, py, pz] = poi.posicao;
+    let nearestWaypoint = waypoints[0];
+    let bestDistance = Number.POSITIVE_INFINITY;
+
+    for (const waypoint of waypoints) {
+      const [wx, wy, wz] = waypoint.posicao;
+      const distance = Math.sqrt((px - wx) ** 2 + (py - wy) ** 2 + (pz - wz) ** 2);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        nearestWaypoint = waypoint;
+      }
+    }
+
+    return { poi, waypoint: nearestWaypoint };
+  });
+
+  return (
+    <>
+      {/* Linha branca: segmentos explícitos w1→w2, w2→w3, w3→w4, w4→w5 */}
+      {segmentos.map((seg, idx) => {
+        const [x1, y1, z1, x2, y2, z2] = seg;
+        return (
+          <line key={`seg-${idx}`}>
+            <bufferGeometry attach="geometry">
+              <bufferAttribute
+                attach="attributes-position"
+                count={2}
+                array={new Float32Array([x1, y1, z1, x2, y2, z2])}
+                itemSize={3}
+              />
+            </bufferGeometry>
+            <lineBasicMaterial color="#ffffff" linewidth={60} />
+          </line>
+        );
+      })}
+
+      {/* Linhas azuis: POI → waypoint mais próximo (igual ao original) */}
+      {nearestConnections.map(({ poi, waypoint }) => {
+        const [px, py, pz] = poi.posicao;
+        const [wx, wy, wz] = waypoint.posicao;
+
+        return (
+          <line key={`${poi.id}-${waypoint.id}`}>
+            <bufferGeometry attach="geometry">
+              <bufferAttribute
+                attach="attributes-position"
+                count={2}
+                array={new Float32Array([px, py + 0.25, pz, wx, wy + 0.25, wz])}
+                itemSize={3}
+              />
+            </bufferGeometry>
+            <lineBasicMaterial color="#2563eb" linewidth={2} />
+          </line>
+        );
+      })}
+
+      {/* Labels verdes dos waypoints */}
+      {waypoints.map((poi) => {
+        const [x, y, z] = poi.posicao;
+        return (
+          <group key={poi.id} position={[x, y, z]}>
+            <Html center distanceFactor={18} style={{ pointerEvents: "none" }}>
+              <span
+                style={{
+                  color: "#16a34a",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  whiteSpace: "nowrap",
+                  display: "inline-block",
+                  textAlign: "center",
+                }}
+              >
+                {poi.id}
+              </span>
+            </Html>
+          </group>
+        );
+      })}
+    </>
+  );
+}
+
 export function MapMarkers({ onSelectPOI }: MapMarkersProps) {
   return (
     <>
+      <WaypointConnections />
       {PONTOS_DA_CIDADE.filter((poi) => poi.nome !== "").map((poi) => (
         <mesh key={poi.id} position={poi.posicao}>
-          <Html center distanceFactor={22} style={{ transition: 'all 0.2s', pointerEvents: 'auto' }}>
+          <Html center distanceFactor={8} style={{ transition: 'all 0.2s', pointerEvents: 'auto' }}>
             <button
               onClick={() => onSelectPOI(poi.id, poi.nome)}
               className="flex items-center gap-2 rounded-full bg-white px-3 py-1.5 shadow-md border border-gray-100 hover:scale-105 active:scale-95 transition-all whitespace-nowrap cursor-pointer select-none font-sans"
