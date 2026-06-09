@@ -9,7 +9,7 @@ export interface PontoCidade {
 
 export const PONTOS_DA_CIDADE: PontoCidade[] = [
   // --- LOCAIS PRINCIPAIS (POIs) ---
-  { id: "fonte", nome: "Fonte de Água",    tipo: "lazer",       posicao: [-22.46, 1.5, -44.97] },
+  { id: "fonte", nome: "Fonte de Água",    tipo: "lazer",       posicao: [-23.11, 0.5, -44.54] },
   { id: "p1",    nome: "Hotel Central",    tipo: "hotel",       posicao: [-27.11, 3.5, -41.26] },
   { id: "p2",    nome: "Restaurante Baixa",tipo: "restaurante", posicao: [-31.45, 3.5, -45.89] },
   { id: "p3",    nome: "Mercado Municipal",tipo: "loja",        posicao: [-26.63, 3.5, -52.17] },

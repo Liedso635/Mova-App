@@ -3,7 +3,10 @@ import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { useGLTF, OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { MapMarkers } from "./Marcadores";
+import { PONTOS_DA_CIDADE } from "./Marcadores";
+import { rotaInterpolada } from "../components/mova/RouteLine";
 
+// ─── SceneSetup ────────────────────────────────────────────────────────────────
 function SceneSetup() {
   const { gl, scene, raycaster } = useThree();
 
@@ -20,7 +23,9 @@ function SceneSetup() {
       const intersects = raycaster.intersectObjects(scene.children, true);
       if (intersects.length > 0) {
         const { x, y, z } = intersects[0].point;
-        console.log(`"posicao": { "x": ${x.toFixed(2)}, "y": ${y.toFixed(2)}, "z": ${z.toFixed(2)} }`);
+        console.log(
+          `"posicao": { "x": ${x.toFixed(2)}, "y": ${y.toFixed(2)}, "z": ${z.toFixed(2)} }`
+        );
       }
     };
 
@@ -32,6 +37,7 @@ function SceneSetup() {
   return null;
 }
 
+// ─── CameraInfo ────────────────────────────────────────────────────────────────
 function CameraInfo() {
   const { camera } = useThree();
 
@@ -49,6 +55,7 @@ function CameraInfo() {
   return null;
 }
 
+// ─── Lights ────────────────────────────────────────────────────────────────────
 function Lights() {
   return (
     <>
@@ -68,7 +75,6 @@ function Lights() {
         shadow-bias={-0.001}
         shadow-radius={5}
       />
-
       <spotLight
         color="#FFFFFF"
         intensity={2000}
@@ -85,24 +91,28 @@ function Lights() {
         shadow-bias={-0.001}
         shadow-radius={5}
       />
-
       <hemisphereLight
         color="rgb(0, 35, 200)"
         groundColor="#444444"
         intensity={0.6}
         position={[0, 50, 0]}
       />
-
       <ambientLight color="#FFFFFF" intensity={0.1} />
     </>
   );
 }
 
-const carroRef = { current: null as THREE.Group | null };
+// ─── Referência global ao mesh do carro ────────────────────────────────────────
+export const carroRef = { current: null as THREE.Group | null };
 
-function Carro() {
+// ─── Carro ─────────────────────────────────────────────────────────────────────
+function Carro({ origemId }: { origemId?: string | null }) {
   const { scene } = useGLTF("/car1.glb");
 
+  const ALTURA_CARRO = 0.36;
+  const POSICAO_PADRAO: [number, number, number] = [-24.98, ALTURA_CARRO, -45.02];
+
+  // Activa sombras em todos os meshes do carro
   useEffect(() => {
     scene.traverse((obj) => {
       if ((obj as THREE.Mesh).isMesh) {
@@ -113,33 +123,75 @@ function Carro() {
     });
   }, [scene]);
 
+  // Posição inicial baseada na origem seleccionada
+  useEffect(() => {
+    if (!origemId || !carroRef.current) return;
+    const ponto = PONTOS_DA_CIDADE.find((p) => p.id === origemId);
+    if (!ponto) return;
+    carroRef.current.position.set(ponto.posicao[0], ALTURA_CARRO, ponto.posicao[2]);
+  }, [origemId]);
+
+  // Animação frame-a-frame — o carro segue os pontos interpolados da rota
+  useFrame(() => {
+    if (!carroRef.current) return;
+
+    const pts = rotaInterpolada.pontos;
+    if (pts.length < 2) return;
+
+    // Só anima se a rota estiver activa OU se ainda estiver a terminar (progresso > 0)
+    if (!rotaInterpolada.ativa && rotaInterpolada.progresso.current === 0) return;
+
+    const t = rotaInterpolada.progresso.current;
+    const idx = Math.min(Math.floor(t), pts.length - 2);
+    const frac = Math.min(t - idx, 1);
+
+    // Posição interpolada no segmento actual
+    const alvo = new THREE.Vector3().lerpVectors(pts[idx], pts[idx + 1], frac);
+
+    // Suavização extra da posição (lerp)
+    carroRef.current.position.lerp(alvo, 0.18);
+
+    // Orientação suave na direcção do movimento
+    const nextIdx = Math.min(idx + 1, pts.length - 1);
+    const dir = new THREE.Vector3().subVectors(pts[nextIdx], pts[idx]);
+    if (dir.lengthSq() > 0.0001) {
+      const angle = Math.atan2(dir.x, dir.z);
+      const targetQuat = new THREE.Quaternion().setFromEuler(
+        new THREE.Euler(0, angle, 0)
+      );
+      carroRef.current.quaternion.slerp(targetQuat, 0.12);
+    }
+  });
+
   return (
     <primitive
       ref={carroRef}
       object={scene}
-      position={[-24.98, 0.36, -45.02]}
+      position={POSICAO_PADRAO}
       scale={[0.05, 0.04, 0.05]}
-      rotation={[
-        THREE.MathUtils.degToRad(0),
-        THREE.MathUtils.degToRad(-130),
-        THREE.MathUtils.degToRad(0),
-      ]}
     />
   );
 }
 
+// ─── SeguirCarro ───────────────────────────────────────────────────────────────
+// A câmara orbit segue o carro enquanto ele se move
 function SeguirCarro({ controlsRef }: { controlsRef: React.RefObject<any> }) {
   useFrame(() => {
     if (!carroRef.current || !controlsRef.current) return;
+    if (!rotaInterpolada.ativa && rotaInterpolada.progresso.current === 0) return;
 
     const pos = carroRef.current.position;
-    controlsRef.current.target.set(pos.x, pos.y, pos.z);
+    controlsRef.current.target.lerp(
+      new THREE.Vector3(pos.x, pos.y, pos.z),
+      0.08 // suavização do alvo da câmara
+    );
     controlsRef.current.update();
   });
 
   return null;
 }
 
+// ─── CityModel ─────────────────────────────────────────────────────────────────
 function CityModel() {
   const { scene } = useGLTF("/city.glb");
   useEffect(() => {
@@ -158,12 +210,14 @@ function CityModel() {
   return <primitive object={scene} />;
 }
 
+// ─── CityScene ─────────────────────────────────────────────────────────────────
 interface CitySceneProps {
   onSelectPOI?: (id: string, nome: string) => void;
+  origemId?: string | null;
   children?: React.ReactNode;
 }
 
-export default function CityScene({ onSelectPOI, children }: CitySceneProps) {
+export default function CityScene({ onSelectPOI, origemId, children }: CitySceneProps) {
   const controlsRef = useRef<any>(null);
 
   return (
@@ -195,8 +249,12 @@ export default function CityScene({ onSelectPOI, children }: CitySceneProps) {
         <Lights />
         <Suspense fallback={null}>
           <CityModel />
-          <Carro />
-          <MapMarkers onSelectPOI={onSelectPOI || ((id, nome) => console.log("Clicou em:", id, nome))} />
+          <Carro origemId={origemId} />
+          <MapMarkers
+            onSelectPOI={
+              onSelectPOI || ((id, nome) => console.log("Clicou em:", id, nome))
+            }
+          />
           {children}
         </Suspense>
         <OrbitControls
