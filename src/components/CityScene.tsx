@@ -6,7 +6,6 @@ import { MapMarkers } from "./Marcadores";
 import { PONTOS_DA_CIDADE } from "./Marcadores";
 import { rotaInterpolada } from "../components/mova/RouteLine";
 
-// ─── SceneSetup ────────────────────────────────────────────────────────────────
 function SceneSetup() {
   const { gl, scene, raycaster } = useThree();
 
@@ -37,7 +36,6 @@ function SceneSetup() {
   return null;
 }
 
-// ─── CameraInfo ────────────────────────────────────────────────────────────────
 function CameraInfo() {
   const { camera } = useThree();
 
@@ -55,7 +53,6 @@ function CameraInfo() {
   return null;
 }
 
-// ─── Lights ────────────────────────────────────────────────────────────────────
 function Lights() {
   return (
     <>
@@ -102,17 +99,13 @@ function Lights() {
   );
 }
 
-// ─── Referência global ao mesh do carro ────────────────────────────────────────
 export const carroRef = { current: null as THREE.Group | null };
 
-// ─── Carro ─────────────────────────────────────────────────────────────────────
 function Carro({ origemId }: { origemId?: string | null }) {
   const { scene } = useGLTF("/car1.glb");
-
   const ALTURA_CARRO = 0.36;
   const POSICAO_PADRAO: [number, number, number] = [-24.98, ALTURA_CARRO, -45.02];
 
-  // Activa sombras em todos os meshes do carro
   useEffect(() => {
     scene.traverse((obj) => {
       if ((obj as THREE.Mesh).isMesh) {
@@ -123,7 +116,6 @@ function Carro({ origemId }: { origemId?: string | null }) {
     });
   }, [scene]);
 
-  // Posição inicial baseada na origem seleccionada
   useEffect(() => {
     if (!origemId || !carroRef.current) return;
     const ponto = PONTOS_DA_CIDADE.find((p) => p.id === origemId);
@@ -131,27 +123,21 @@ function Carro({ origemId }: { origemId?: string | null }) {
     carroRef.current.position.set(ponto.posicao[0], ALTURA_CARRO, ponto.posicao[2]);
   }, [origemId]);
 
-  // Animação frame-a-frame — o carro segue os pontos interpolados da rota
   useFrame(() => {
     if (!carroRef.current) return;
 
     const pts = rotaInterpolada.pontos;
     if (pts.length < 2) return;
 
-    // Só anima se a rota estiver activa OU se ainda estiver a terminar (progresso > 0)
     if (!rotaInterpolada.ativa && rotaInterpolada.progresso.current === 0) return;
 
     const t = rotaInterpolada.progresso.current;
     const idx = Math.min(Math.floor(t), pts.length - 2);
     const frac = Math.min(t - idx, 1);
 
-    // Posição interpolada no segmento actual
     const alvo = new THREE.Vector3().lerpVectors(pts[idx], pts[idx + 1], frac);
-
-    // Suavização extra da posição (lerp)
     carroRef.current.position.lerp(alvo, 0.18);
 
-    // Orientação suave na direcção do movimento
     const nextIdx = Math.min(idx + 1, pts.length - 1);
     const dir = new THREE.Vector3().subVectors(pts[nextIdx], pts[idx]);
     if (dir.lengthSq() > 0.0001) {
@@ -173,37 +159,91 @@ function Carro({ origemId }: { origemId?: string | null }) {
   );
 }
 
-// ─── SeguirCarro ───────────────────────────────────────────────────────────────
-// Move câmara + target juntos para manter o offset (distância/ângulo) constante
-function SeguirCarro({ controlsRef }: { controlsRef: React.RefObject<any> }) {
+interface SeguirCarroProps {
+  controlsRef: React.RefObject<any>;
+  cameraPresa: boolean;
+}
+
+function SeguirCarro({ controlsRef, cameraPresa }: SeguirCarroProps) {
   const { camera } = useThree();
-  const prevTarget = useRef(new THREE.Vector3());
+  const estaAnimandoRef = useRef(false);
+  const ultimoCarroPosRef = useRef(new THREE.Vector3());
+  
+  // Guardamos o offset local relativo à rotação traseira do carro
+  const OFFSET_TRASEIRO_PADRAO = new THREE.Vector3(0, 2, 4);
+  const offsetManualRef = useRef(new THREE.Vector3(0, 2, 4));
 
   useFrame(() => {
     if (!carroRef.current || !controlsRef.current) return;
-    if (!rotaInterpolada.ativa && rotaInterpolada.progresso.current === 0) return;
 
+    const rotaAtiva = rotaInterpolada.ativa || rotaInterpolada.progresso.current > 0;
     const carroPos = carroRef.current.position;
-    const novoTarget = new THREE.Vector3(carroPos.x, carroPos.y, carroPos.z);
-
-    // Target suavizado frame a frame
     const targetAtual = controlsRef.current.target as THREE.Vector3;
-    const targetSuave = targetAtual.clone().lerp(novoTarget, 0.08);
 
-    // Delta entre frame anterior e agora -> aplica à câmara para manter o offset
-    const delta = new THREE.Vector3().subVectors(targetSuave, prevTarget.current);
-    camera.position.add(delta);
+    // Monitora teleporte instantâneo (quando a distância do frame passado pro atual for absurda)
+    const distanciaSalto = carroPos.distanceTo(ultimoCarroPosRef.current);
+    const acabouDeComecar = rotaAtiva && !estaAnimandoRef.current;
 
-    controlsRef.current.target.copy(targetSuave);
+    if (acabouDeComecar || distanciaSalto > 10) {
+      estaAnimandoRef.current = true;
+
+      // Obtém a direção para onde a frente do carro está olhando
+      const direcaoCarro = new THREE.Vector3(0, 0, 1).applyQuaternion(carroRef.current.quaternion);
+      
+      // Calcula a posição perfeita atrás do carro
+      const posicaoAtras = carroPos.clone().sub(direcaoCarro.multiplyScalar(OFFSET_TRASEIRO_PADRAO.z));
+      posicaoAtras.y += OFFSET_TRASEIRO_PADRAO.y;
+
+      // Teleporta os focos e câmera sem lerp para não perder o carro
+      targetAtual.copy(carroPos);
+      camera.position.copy(posicaoAtras);
+      controlsRef.current.update();
+
+      // Inicializa os vetores de controle estáveis
+      offsetManualRef.current.subVectors(camera.position, targetAtual);
+      ultimoCarroPosRef.current.copy(carroPos);
+      return;
+    }
+
+    if (!rotaAtiva) {
+      estaAnimandoRef.current = false;
+      ultimoCarroPosRef.current.copy(carroPos);
+      return;
+    }
+
+    // --- MODO: CÂMERA PRESA (Acompanha as curvas olhando para a traseira) ---
+    if (cameraPresa) {
+      // 1. Encontra o ponto exato atrás do carro baseado no ângulo de rotação atual do carro
+      const direcaoTraseira = new THREE.Vector3(0, 0, -1).applyQuaternion(carroRef.current.quaternion);
+      const posicaoIdealCamera = carroPos.clone()
+        .add(direcaoTraseira.multiplyScalar(OFFSET_TRASEIRO_PADRAO.z))
+        .add(new THREE.Vector3(0, OFFSET_TRASEIRO_PADRAO.y, 0));
+
+      // 2. Aplica interpolação suave para seguir o movimento do veículo de forma estável
+      targetAtual.lerp(carroPos, 0.1);
+      camera.position.lerp(posicaoIdealCamera, 0.1);
+      
+      // Atualiza o offset manual caso o usuário mude para o modo livre depois
+      offsetManualRef.current.subVectors(camera.position, targetAtual);
+    } 
+    // --- MODO: CÂMERA DESPRENDIDA (Movimento livre com mouse correndo junto ao carro) ---
+    else {
+      // Move a câmera e o target linearmente na mesma medida em que o carro se move
+      const deslocamentoCarro = new THREE.Vector3().subVectors(carroPos, ultimoCarroPosRef.current);
+      targetAtual.add(deslocamentoCarro);
+      camera.position.add(deslocamentoCarro);
+
+      // Lê a órbita que você está fazendo com o mouse e armazena
+      offsetManualRef.current.subVectors(camera.position, targetAtual);
+    }
+
+    ultimoCarroPosRef.current.copy(carroPos);
     controlsRef.current.update();
-
-    prevTarget.current.copy(targetSuave);
   });
 
   return null;
 }
 
-// ─── CityModel ─────────────────────────────────────────────────────────────────
 function CityModel() {
   const { scene } = useGLTF("/city.glb");
   useEffect(() => {
@@ -222,14 +262,14 @@ function CityModel() {
   return <primitive object={scene} />;
 }
 
-// ─── CityScene ─────────────────────────────────────────────────────────────────
 interface CitySceneProps {
   onSelectPOI?: (id: string, nome: string) => void;
   origemId?: string | null;
+  cameraPresa: boolean;
   children?: React.ReactNode;
 }
 
-export default function CityScene({ onSelectPOI, origemId, children }: CitySceneProps) {
+export default function CityScene({ onSelectPOI, origemId, cameraPresa, children }: CitySceneProps) {
   const controlsRef = useRef<any>(null);
 
   return (
@@ -257,7 +297,7 @@ export default function CityScene({ onSelectPOI, origemId, children }: CityScene
       >
         <SceneSetup />
         <CameraInfo />
-        <SeguirCarro controlsRef={controlsRef} />
+        <SeguirCarro controlsRef={controlsRef} cameraPresa={cameraPresa} />
         <Lights />
         <Suspense fallback={null}>
           <CityModel />
