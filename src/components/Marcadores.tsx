@@ -10,7 +10,7 @@ export interface PontoCidade {
 export const PONTOS_DA_CIDADE: PontoCidade[] = [
   // --- LOCAIS PRINCIPAIS (POIs) ---
   { id: "fonte", nome: "Fonte de Água",    tipo: "lazer",       posicao: [-23.11, 0.5, -44.54] },
-  { id: "p1",    nome: "Hotel Central",    tipo: "hotel",       posicao: [-27.11, 3.5, -41.26] },
+  { id: "p1",    nome: "Hotel Central",    tipo: "hotel",       posicao: [-26.98, 3.5, -41.65] },
   { id: "p2",    nome: "Restaurante Baixa",tipo: "restaurante", posicao: [-31.45, 3.5, -45.89] },
   { id: "p3",    nome: "Mercado Municipal",tipo: "loja",        posicao: [-26.63, 3.5, -52.17] },
   { id: "p4",    nome: "Hospital Mova",    tipo: "saude",       posicao: [-45.40, 4.0, -45.71] },
@@ -23,6 +23,7 @@ export const PONTOS_DA_CIDADE: PontoCidade[] = [
 { id: "w4",  nome: "", tipo: "waypoint", posicao: [-26.31, 1.41, -43.77] },
 
 { id: "w5",  nome: "", tipo: "waypoint", posicao: [-27.52, 1.41, -42.65] },
+{ id: "wf",  nome: "", tipo: "waypoint", posicao: [-28.70, 1.41, -41.31] },
 { id: "w6",  nome: "", tipo: "waypoint", posicao: [-26.28, 1.41, -41.17] },
 { id: "w7",  nome: "", tipo: "waypoint", posicao: [-25.10, 1.41, -42.39] },
 { id: "w8",  nome: "", tipo: "waypoint", posicao: [-24.19, 1.41, -41.26] },
@@ -39,15 +40,22 @@ export const PONTOS_DA_CIDADE: PontoCidade[] = [
 { id: "w17", nome: "", tipo: "waypoint", posicao: [-34.22, 1.41, -42.25] },
 
 { id: "w18", nome: "", tipo: "waypoint", posicao: [-30.26, 1.41, -42.57] },
+{ id: "wa", nome: "", tipo: "waypoint", posicao: [-31.83, 1.41, -42.44] },
 { id: "w19", nome: "", tipo: "waypoint", posicao: [-30.05, 1.41, -44.88] },
 { id: "w20", nome: "", tipo: "waypoint", posicao: [-31.10, 1.41, -45.98] },
 { id: "w21", nome: "", tipo: "waypoint", posicao: [-29.82, 1.41, -47.46] },
+{ id: "wd", nome: "", tipo: "waypoint", posicao: [-31.19, 1.41, -48.79] },
+{ id: "we", nome: "", tipo: "waypoint", posicao: [-32.69, 1.41, -47.41] },
+
 { id: "w22", nome: "", tipo: "waypoint", posicao: [-28.72, 1.41, -48.74] },
 
 { id: "w23", nome: "", tipo: "waypoint", posicao: [-26.25, 1.41, -51.14] },
 { id: "w24", nome: "", tipo: "waypoint", posicao: [-23.85, 1.41, -53.82] },
 
 { id: "w25", nome: "", tipo: "waypoint", posicao: [-22.48, 1.41, -52.58] },
+{ id: "wb", nome: "", tipo: "waypoint", posicao: [-21.34, 1.41, -51.29] },
+{ id: "wc", nome: "", tipo: "waypoint", posicao: [-22.40, 1.41, -49.64] },
+
 { id: "w26", nome: "", tipo: "waypoint", posicao: [-25.02, 1.41, -49.87] },
 
 { id: "w27", nome: "", tipo: "waypoint", posicao: [-22.52, 1.41, -47.52] },
@@ -66,13 +74,14 @@ export const ARESTAS: [string, string][] = [
   ["p3","w23"],
   ["p5","w13"],["p5","w14"],
 
+
 ["w1","w2"],["w2","w3"],["w3","w4"],
 ["w4","w5"],["w5","w6"],
 ["w6","w7"],["w7","w8"],["w8","w9"],["w9","w10"],
 
 ["w10","w11"],["w6","w7"],["w7","w8"],["w8","w9"],
 ["w9","w10"],["w10","w11"],["w11","w12"],["w12","w13"],
-["w13","w14"],["w14","w15"],["w15","w16"],["w16","w17"],
+["w13","w14"],["w15","w16"],["w16","w17"],
 ["w17","w18"],["w18","w19"],["w19","w20"],
 ["w21","w22"],["w22","w23"],["w23","w24"],["w24","w25"],
 ["w25","w26"],["w26","w27"],
@@ -80,7 +89,8 @@ export const ARESTAS: [string, string][] = [
 ["w1", "w4"],["w1", "w28"],["w7", "w28"],["w6", "w9"],
 ["w2", "w26"],["w23", "w26"],["w2", "w22"],["w3", "w21"],
 ["w4", "w7"],["w6", "w10"],["w11", "w9"], ["w3", "w19"], ["w19", "w5"], ["w14", "w16"],
-["w15", "w17"],
+["w15", "w17"],["w19", "wa"],["w25", "wb"],["wb", "wc"],["wc", "w27"],["w21", "wd"],["wd", "we"],
+["we", "w20"],["w5", "wf"],["wf", "w18"]
 ];
 
 // Lógica das arestas mantida — só o render das linhas foi removido
